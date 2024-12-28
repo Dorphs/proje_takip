@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}Projeler - Proje Takip Sistemi{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Başlık ve Arama -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Projeler</h1>
+        {% if user.unvan == 'GM' %}
+        <a href="{% url 'proje_ekle' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Yeni Proje
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Filtreleme ve Arama Formu -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="search" class="form-control" placeholder="Proje Ara..." 
+                           value="{{ search_query|default:'' }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="durum" class="form-select">
+                        <option value="">Durum Seçin</option>
+                        <option value="Başlamadı" {% if durum_filter == 'Başlamadı' %}selected{% endif %}>Başlamadı</option>
+                        <option value="Devam Ediyor" {% if durum_filter == 'Devam Ediyor' %}selected{% endif %}>Devam Ediyor</option>
+                        <option value="Tamamlandı" {% if durum_filter == 'Tamamlandı' %}selected{% endif %}>Tamamlandı</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="oncelik" class="form-select">
+                        <option value="">Öncelik Seçin</option>
+                        <option value="Y" {% if oncelik_filter == 'Y' %}selected{% endif %}>Yüksek</option>
+                        <option value="O" {% if oncelik_filter == 'O' %}selected{% endif %}>Orta</option>
+                        <option value="D" {% if oncelik_filter == 'D' %}selected{% endif %}>Düşük</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Filtrele</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Proje Listesi -->
+    <div class="card">
+        <div class="card-body">
+            {% if projeler %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Proje Adı</th>
+                            <th>Daire Başkanlıkları</th>
+                            <th>Şube Müdürlükleri</th>
+                            <th>Durum</th>
+                            <th>Öncelik</th>
+                            <th>İlerleme</th>
+                            <th>Bitiş Tarihi</th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for proje in projeler %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'proje_detay' pk=proje.pk %}">{{ proje.ad }}</a>
+                            </td>
+                            <td>
+                                {% for daire in proje.daire_baskanliklari.all %}
+                                <span class="badge bg-secondary">{{ daire.ad }}</span>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% for sube in proje.sube_mudurlukleri.all %}
+                                <span class="badge bg-info">{{ sube.ad }}</span>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <span class="badge {% if proje.durum == 'Tamamlandı' %}bg-success
+                                                 {% elif proje.durum == 'Devam Ediyor' %}bg-primary
+                                                 {% else %}bg-warning{% endif %}">
+                                    {{ proje.durum }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge {% if proje.oncelik == 'Y' %}bg-danger
+                                                 {% elif proje.oncelik == 'O' %}bg-warning
+                                                 {% else %}bg-info{% endif %}">
+                                    {{ proje.get_oncelik_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="progress">
+                                    {% with ilerleme_yuzdesi=proje.ilerleme_yuzdesi %}
+                                    <div class="progress-bar bg-success" role="progressbar" 
+                                         style="width: {{ ilerleme_yuzdesi }}%"
+                                         aria-valuenow="{{ ilerleme_yuzdesi }}" aria-valuemin="0" aria-valuemax="100">
+                                        {{ ilerleme_yuzdesi }}%
+                                    </div>
+                                    {% endwith %}
+                                </div>
+                            </td>
+                            <td>{{ proje.bitis_tarihi|date:"d.m.Y" }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'proje_detay' pk=proje.pk %}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if user.unvan == 'GM' %}
+                                    <a href="{% url 'proje_duzenle' pk=proje.pk %}" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-center">Henüz proje bulunmamaktadır.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

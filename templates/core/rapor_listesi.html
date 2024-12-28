@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block title %}Raporlar - Proje Takip Sistemi{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h1 class="h3 mb-4">Raporlar</h1>
+
+    <div class="row">
+        <!-- Genel Müdür için tüm raporlar -->
+        {% if user.unvan == 'GM' %}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Daire Başkanlıkları Raporları</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for daire in daire_baskanliklari %}
+                        <a href="#" class="list-group-item list-group-item-action">
+                            {{ daire.ad }}
+                            <span class="badge bg-primary float-end">
+                                {{ daire.projeler.count }} Proje
+                            </span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Genel Proje Durumu</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="projeChart"></canvas>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Daire Başkanı için kendi dairesinin raporları -->
+        {% if user.unvan == 'DB' %}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Şube Müdürlükleri Raporları</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for sube in sube_mudurlukleri %}
+                        <a href="#" class="list-group-item list-group-item-action">
+                            {{ sube.ad }}
+                            <span class="badge bg-primary float-end">
+                                {{ sube.projeler.count }} Proje
+                            </span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Daire Başkanlığı Proje Durumu</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="daireChart"></canvas>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Şube Müdürü için kendi şubesinin raporları -->
+        {% if user.unvan == 'SM' %}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Şube Müdürlüğü Proje Durumu</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <canvas id="subeChart"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Proje</th>
+                                            <th>Durum</th>
+                                            <th>İlerleme</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for proje in sube_projeleri %}
+                                        <tr>
+                                            <td>
+                                                <a href="{% url 'proje_detay' pk=proje.pk %}">{{ proje.ad }}</a>
+                                            </td>
+                                            <td>
+                                                <span class="badge {% if proje.durum == 'Tamamlandı' %}bg-success
+                                                                 {% elif proje.durum == 'Devam Ediyor' %}bg-primary
+                                                                 {% else %}bg-warning{% endif %}">
+                                                    {{ proje.durum }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="progress">
+                                                    <div class="progress-bar bg-success" role="progressbar" 
+                                                         style="width: {{ proje.ilerleme_yuzdesi }}%">
+                                                        {{ proje.ilerleme_yuzdesi }}%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if user.unvan == 'GM' %}
+        // Genel proje durumu grafiği
+        var projeCtx = document.getElementById('projeChart').getContext('2d');
+        new Chart(projeCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Bekleyen', 'Devam Eden', 'Tamamlanan'],
+                datasets: [{
+                    data: [
+                        {{ bekleyen_projeler }},
+                        {{ devam_eden_projeler }},
+                        {{ tamamlanan_projeler }}
+                    ],
+                    backgroundColor: ['#ffc107', '#0d6efd', '#198754']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+        {% endif %}
+
+        {% if user.unvan == 'DB' %}
+        // Daire başkanlığı proje durumu grafiği
+        var daireCtx = document.getElementById('daireChart').getContext('2d');
+        new Chart(daireCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Bekleyen', 'Devam Eden', 'Tamamlanan'],
+                datasets: [{
+                    data: [
+                        {{ bekleyen_projeler }},
+                        {{ devam_eden_projeler }},
+                        {{ tamamlanan_projeler }}
+                    ],
+                    backgroundColor: ['#ffc107', '#0d6efd', '#198754']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+        {% endif %}
+
+        {% if user.unvan == 'SM' %}
+        // Şube müdürlüğü proje durumu grafiği
+        var subeCtx = document.getElementById('subeChart').getContext('2d');
+        new Chart(subeCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Bekleyen', 'Devam Eden', 'Tamamlanan'],
+                datasets: [{
+                    data: [
+                        {{ bekleyen_projeler }},
+                        {{ devam_eden_projeler }},
+                        {{ tamamlanan_projeler }}
+                    ],
+                    backgroundColor: ['#ffc107', '#0d6efd', '#198754']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+        {% endif %}
+    });
+</script>
+{% endblock %}
+{% endblock %}

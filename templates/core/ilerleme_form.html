@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }} - Proje Takip Sistemi{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">{{ title }}</h4>
+                    <p class="mb-0">Proje: {{ proje.ad }}</p>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" class="form">
+                        {% csrf_token %}
+                        {{ form.aciklama|as_crispy_field }}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="id_dosyalar">Dosyalar</label>
+                                    <input type="file" name="dosyalar" multiple class="form-control" id="id_dosyalar">
+                                    <small class="form-text text-muted">Birden fazla dosya seçebilirsiniz.</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="id_fotograflar">Fotoğraflar</label>
+                                    <input type="file" name="fotograflar" multiple class="form-control" id="id_fotograflar" accept="image/*">
+                                    <small class="form-text text-muted">Birden fazla fotoğraf seçebilirsiniz.</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-12 text-end">
+                                <a href="{% url 'proje_detay' pk=proje.pk %}" class="btn btn-secondary">İptal</a>
+                                <button type="submit" class="btn btn-primary">Kaydet</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Dosya seçildiğinde önizleme göster
+    document.getElementById('id_fotograflar').addEventListener('change', function(e) {
+        const previewContainer = document.createElement('div');
+        previewContainer.className = 'row mt-3';
+        previewContainer.id = 'foto-preview';
+        
+        // Önceki önizlemeleri temizle
+        const oldPreview = document.getElementById('foto-preview');
+        if (oldPreview) oldPreview.remove();
+        
+        // Seçilen her fotoğraf için önizleme oluştur
+        for (const file of this.files) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const col = document.createElement('div');
+                col.className = 'col-md-3 mb-3';
+                
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'img-thumbnail';
+                img.style.maxHeight = '200px';
+                
+                col.appendChild(img);
+                previewContainer.appendChild(col);
+            }
+            reader.readAsDataURL(file);
+        }
+        
+        this.parentElement.appendChild(previewContainer);
+    });
+</script>
+{% endblock %}
+{% endblock %}

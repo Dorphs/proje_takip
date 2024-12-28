@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block title %}Gösterge Paneli - Proje Takip Sistemi{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- İstatistik Kartları -->
+    <div class="row">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-primary h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Bekleyen Projeler</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ bekleyen_projeler }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Devam Eden Projeler</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ devam_eden_projeler }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tasks fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-info h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Tamamlanan Projeler</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ tamamlanan_projeler }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Son Projeler ve Görevler -->
+    <div class="row">
+        <!-- Son Projeler -->
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="m-0 font-weight-bold">Son Projeler</h6>
+                </div>
+                <div class="card-body">
+                    {% if son_projeler %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Proje Adı</th>
+                                    <th>Durum</th>
+                                    <th>Öncelik</th>
+                                    <th>Bitiş Tarihi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for proje in son_projeler %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'proje_detay' pk=proje.pk %}">{{ proje.ad }}</a>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if proje.durum == 'Tamamlandı' %}bg-success
+                                                         {% elif proje.durum == 'Devam Ediyor' %}bg-primary
+                                                         {% else %}bg-warning{% endif %}">
+                                            {{ proje.durum }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if proje.oncelik == 'Y' %}bg-danger
+                                                         {% elif proje.oncelik == 'O' %}bg-warning
+                                                         {% else %}bg-info{% endif %}">
+                                            {{ proje.get_oncelik_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ proje.bitis_tarihi|date:"d.m.Y" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center">Henüz proje bulunmamaktadır.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Son Görevler -->
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h6 class="m-0 font-weight-bold">Son Görevler</h6>
+                </div>
+                <div class="card-body">
+                    {% if son_gorevler %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Görev</th>
+                                    <th>Proje</th>
+                                    <th>Durum</th>
+                                    <th>Bitiş Tarihi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for gorev in son_gorevler %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'gorev_detay' pk=gorev.pk %}">{{ gorev.ad }}</a>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'proje_detay' pk=gorev.proje.pk %}">{{ gorev.proje.ad }}</a>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if gorev.durum == 'Tamamlandı' %}bg-success
+                                                         {% elif gorev.durum == 'Devam Ediyor' %}bg-primary
+                                                         {% else %}bg-warning{% endif %}">
+                                            {{ gorev.durum }}
+                                        </span>
+                                    </td>
+                                    <td>{{ gorev.bitis_tarihi|date:"d.m.Y" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center">Henüz görev bulunmamaktadır.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Otomatik yenileme için her 5 dakikada bir sayfayı yenile
+    setTimeout(function() {
+        location.reload();
+    }, 300000);
+</script>
+{% endblock %}
+{% endblock %}
