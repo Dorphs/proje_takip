@@ -19,14 +19,12 @@
                         {% csrf_token %}
                         <div class="row">
                             <div class="col-md-6">
-                                {{ form.ad|as_crispy_field }}
+                                {{ form.baslik|as_crispy_field }}
                                 {{ form.aciklama|as_crispy_field }}
-                                {{ form.sorumlu|as_crispy_field }}
+                                {{ form.atanan|as_crispy_field }}
                             </div>
                             <div class="col-md-6">
-                                {{ form.baslama_tarihi|as_crispy_field }}
-                                {{ form.bitis_tarihi|as_crispy_field }}
-                                {{ form.oncelik|as_crispy_field }}
+                                {{ form.son_tarih|as_crispy_field }}
                                 {{ form.durum|as_crispy_field }}
                             </div>
                         </div>

@@ -1,131 +1,173 @@
 {% extends 'base.html' %}
 
-{% block title %}Projeler - Proje Takip Sistemi{% endblock %}
+{% block title %}Projeler - {{ block.super }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <!-- Başlık ve Arama -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3">Projeler</h1>
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="h3 mb-0 d-flex align-items-center">
+            <span class="material-icons me-2" style="font-size: 2rem;">folder</span>
+            Projeler
+        </h1>
+    </div>
+    <div class="col text-end">
         {% if user.unvan == 'GM' %}
         <a href="{% url 'proje_ekle' %}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Yeni Proje
+            <span class="material-icons">add</span>
+            Yeni Proje
         </a>
         {% endif %}
     </div>
+</div>
 
-    <!-- Filtreleme ve Arama Formu -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="get" class="row g-3">
-                <div class="col-md-4">
-                    <input type="text" name="search" class="form-control" placeholder="Proje Ara..." 
-                           value="{{ search_query|default:'' }}">
+<!-- Filtreleme -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text border-0 bg-transparent">
+                        <span class="material-icons text-secondary">search</span>
+                    </span>
+                    <input type="text" name="search" class="form-control ps-0" 
+                           placeholder="Proje Ara..." value="{{ request.GET.search }}">
                 </div>
-                <div class="col-md-3">
-                    <select name="durum" class="form-select">
-                        <option value="">Durum Seçin</option>
-                        <option value="Başlamadı" {% if durum_filter == 'Başlamadı' %}selected{% endif %}>Başlamadı</option>
-                        <option value="Devam Ediyor" {% if durum_filter == 'Devam Ediyor' %}selected{% endif %}>Devam Ediyor</option>
-                        <option value="Tamamlandı" {% if durum_filter == 'Tamamlandı' %}selected{% endif %}>Tamamlandı</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <select name="oncelik" class="form-select">
-                        <option value="">Öncelik Seçin</option>
-                        <option value="Y" {% if oncelik_filter == 'Y' %}selected{% endif %}>Yüksek</option>
-                        <option value="O" {% if oncelik_filter == 'O' %}selected{% endif %}>Orta</option>
-                        <option value="D" {% if oncelik_filter == 'D' %}selected{% endif %}>Düşük</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100">Filtrele</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Proje Listesi -->
-    <div class="card">
-        <div class="card-body">
-            {% if projeler %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Proje Adı</th>
-                            <th>Daire Başkanlıkları</th>
-                            <th>Şube Müdürlükleri</th>
-                            <th>Durum</th>
-                            <th>Öncelik</th>
-                            <th>İlerleme</th>
-                            <th>Bitiş Tarihi</th>
-                            <th>İşlemler</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for proje in projeler %}
-                        <tr>
-                            <td>
-                                <a href="{% url 'proje_detay' pk=proje.pk %}">{{ proje.ad }}</a>
-                            </td>
-                            <td>
-                                {% for daire in proje.daire_baskanliklari.all %}
-                                <span class="badge bg-secondary">{{ daire.ad }}</span>
-                                {% endfor %}
-                            </td>
-                            <td>
-                                {% for sube in proje.sube_mudurlukleri.all %}
-                                <span class="badge bg-info">{{ sube.ad }}</span>
-                                {% endfor %}
-                            </td>
-                            <td>
-                                <span class="badge {% if proje.durum == 'Tamamlandı' %}bg-success
-                                                 {% elif proje.durum == 'Devam Ediyor' %}bg-primary
-                                                 {% else %}bg-warning{% endif %}">
-                                    {{ proje.durum }}
-                                </span>
-                            </td>
-                            <td>
-                                <span class="badge {% if proje.oncelik == 'Y' %}bg-danger
-                                                 {% elif proje.oncelik == 'O' %}bg-warning
-                                                 {% else %}bg-info{% endif %}">
-                                    {{ proje.get_oncelik_display }}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="progress">
-                                    {% with ilerleme_yuzdesi=proje.ilerleme_yuzdesi %}
-                                    <div class="progress-bar bg-success" role="progressbar" 
-                                         style="width: {{ ilerleme_yuzdesi }}%"
-                                         aria-valuenow="{{ ilerleme_yuzdesi }}" aria-valuemin="0" aria-valuemax="100">
-                                        {{ ilerleme_yuzdesi }}%
-                                    </div>
-                                    {% endwith %}
-                                </div>
-                            </td>
-                            <td>{{ proje.bitis_tarihi|date:"d.m.Y" }}</td>
-                            <td>
-                                <div class="btn-group">
-                                    <a href="{% url 'proje_detay' pk=proje.pk %}" class="btn btn-sm btn-info">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    {% if user.unvan == 'GM' %}
-                                    <a href="{% url 'proje_duzenle' pk=proje.pk %}" class="btn btn-sm btn-warning">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    {% endif %}
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
             </div>
-            {% else %}
-            <p class="text-center">Henüz proje bulunmamaktadır.</p>
-            {% endif %}
-        </div>
+            <div class="col-md-3">
+                <select name="durum" class="form-select">
+                    <option value="">Durum Seçin</option>
+                    <option value="BS" {% if request.GET.durum == 'BS' %}selected{% endif %}>Başlamadı</option>
+                    <option value="DV" {% if request.GET.durum == 'DV' %}selected{% endif %}>Devam Ediyor</option>
+                    <option value="TM" {% if request.GET.durum == 'TM' %}selected{% endif %}>Tamamlandı</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="oncelik" class="form-select">
+                    <option value="">Öncelik Seçin</option>
+                    <option value="Y" {% if request.GET.oncelik == 'Y' %}selected{% endif %}>Yüksek</option>
+                    <option value="O" {% if request.GET.oncelik == 'O' %}selected{% endif %}>Orta</option>
+                    <option value="D" {% if request.GET.oncelik == 'D' %}selected{% endif %}>Düşük</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <span class="material-icons me-2">filter_list</span>
+                    Filtrele
+                </button>
+            </div>
+        </form>
     </div>
 </div>
+
+<div class="row g-4">
+    {% if projeler %}
+    {% for proje in projeler %}
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">{{ proje.ad }}</h5>
+                    <span class="badge bg-{{ proje.durum_renk }}">{{ proje.get_durum_display }}</span>
+                </div>
+                
+                <p class="card-text text-muted small mb-3">
+                    <span class="material-icons me-1 align-middle" style="font-size: 1rem;">calendar_today</span>
+                    Başlangıç: {{ proje.baslangic_tarihi|date:"d.m.Y" }}
+                    {% if proje.bitis_tarihi %}
+                    <br>
+                    <span class="material-icons me-1 align-middle" style="font-size: 1rem;">flag</span>
+                    Bitiş: {{ proje.bitis_tarihi|date:"d.m.Y" }}
+                    {% endif %}
+                </p>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small class="text-secondary">İlerleme</small>
+                        <small class="text-secondary">{{ proje.ilerleme_yuzdesi }}%</small>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar" role="progressbar" 
+                             style="width: {{ proje.ilerleme_yuzdesi }}%"></div>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="badge bg-{{ proje.oncelik_renk }} me-2">
+                            {{ proje.get_oncelik_display }}
+                        </span>
+                        <small class="text-secondary">
+                            <span class="material-icons align-middle me-1" style="font-size: 1rem;">task</span>
+                            {{ proje.gorev_set.count }} Görev
+                        </small>
+                    </div>
+                    <a href="{% url 'proje_detay' pk=proje.pk %}" class="btn btn-sm btn-outline-primary">
+                        <span class="material-icons">visibility</span>
+                        Detaylar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <span class="material-icons text-secondary mb-3" style="font-size: 4rem;">folder_off</span>
+                <h5 class="mb-3">Henüz proje eklenmemiş</h5>
+                {% if user.unvan == 'GM' %}
+                <a href="{% url 'proje_ekle' %}" class="btn btn-primary">
+                    <span class="material-icons me-2">add</span>
+                    İlk Projeyi Ekle
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <span class="material-icons text-secondary mb-3" style="font-size: 4rem;">folder_off</span>
+                <h5 class="mb-3">Henüz proje eklenmemiş</h5>
+                {% if user.unvan == 'GM' %}
+                <a href="{% url 'proje_ekle' %}" class="btn btn-primary">
+                    <span class="material-icons me-2">add</span>
+                    İlk Projeyi Ekle
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if projeler.has_other_pages %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if projeler.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ projeler.previous_page_number }}">
+                <span class="material-icons">chevron_left</span>
+            </a>
+        </li>
+        {% endif %}
+        
+        {% for i in projeler.paginator.page_range %}
+        <li class="page-item {% if projeler.number == i %}active{% endif %}">
+            <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+        </li>
+        {% endfor %}
+        
+        {% if projeler.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ projeler.next_page_number }}">
+                <span class="material-icons">chevron_right</span>
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
 {% endblock %}

@@ -16,11 +16,14 @@ urlpatterns = [
     # Proje URL'leri
     path('proje/ekle/', views.proje_ekle, name='proje_ekle'),
     path('proje/<int:pk>/', views.proje_detay, name='proje_detay'),
+    path('proje/<int:pk>/ilerleme/ekle/', views.ilerleme_ekle, name='ilerleme_ekle'),
     path('proje/<int:pk>/duzenle/', views.proje_duzenle, name='proje_duzenle'),
+    path('proje/<int:pk>/sil/', views.proje_sil, name='proje_sil'),
     
     # Görev URL'leri
     path('proje/<int:proje_pk>/gorev/ekle/', views.gorev_ekle, name='gorev_ekle'),
     path('gorev/<int:pk>/duzenle/', views.gorev_duzenle, name='gorev_duzenle'),
+    path('gorev/<int:pk>/sil/', views.gorev_sil, name='gorev_sil'),
     
     # İlerleme URL'leri
     path('proje/<int:proje_pk>/ilerleme/ekle/', views.ilerleme_ekle, name='proje_ilerleme_ekle'),

@@ -5,148 +5,145 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Proje Takip Sistemi{% endblock %}</title>
     
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <!-- Custom CSS -->
     <style>
-        .sidebar {
-            min-height: calc(100vh - 56px);
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #475569;
+        }
+        
+        body {
             background-color: #f8f9fa;
         }
-        .content {
-            padding: 20px;
+        
+        .navbar {
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
         }
-        .nav-link {
-            color: #333;
-        }
-        .nav-link:hover {
-            background-color: #e9ecef;
-        }
-        .nav-link.active {
-            background-color: #0d6efd;
-            color: white;
-        }
+        
         .card {
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,.05);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
+        
         .card:hover {
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-            transition: box-shadow 0.3s ease-in-out;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,.1);
         }
-        .table th {
-            background-color: #f8f9fa;
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
         }
-        .badge {
-            font-size: 0.9em;
+        
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+            border-color: #1d4ed8;
+        }
+        
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .alert {
+            border: none;
+            border-radius: 8px;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(37,99,235,.25);
         }
     </style>
-    {% block extra_css %}{% endblock %}
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'dashboard' %}">Proje Takip</a>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white mb-4">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'dashboard' %}">
+                <span class="material-icons me-2">dashboard</span>
+                Proje Takip
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'dashboard' %}">
-                            <i class="fas fa-home"></i> Ana Sayfa
-                        </a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link" href="{% url 'proje_listesi' %}">
-                            <i class="fas fa-project-diagram"></i> Projeler
+                            <span class="material-icons align-middle me-1" style="font-size: 20px;">folder</span>
+                            Projeler
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'rapor_listesi' %}">
-                            <i class="fas fa-chart-bar"></i> Raporlar
+                            <span class="material-icons align-middle me-1" style="font-size: 20px;">assessment</span>
+                            Raporlar
                         </a>
                     </li>
                 </ul>
                 {% if user.is_authenticated %}
-                <ul class="navbar-nav">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user"></i> {{ user.get_full_name|default:user.username }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{% url 'logout' %}">Çıkış Yap</a></li>
-                        </ul>
-                    </li>
-                </ul>
+                <div class="dropdown">
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <span class="material-icons align-middle me-1" style="font-size: 20px;">person</span>
+                        {{ user.get_full_name|default:user.username }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        {% if user.is_staff %}
+                        <li>
+                            <a class="dropdown-item" href="{% url 'admin:index' %}">
+                                <span class="material-icons align-middle me-2" style="font-size: 20px;">admin_panel_settings</span>
+                                Yönetim Paneli
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        {% endif %}
+                        <li>
+                            <a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                                <span class="material-icons align-middle me-2" style="font-size: 20px;">logout</span>
+                                Çıkış Yap
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                {% else %}
+                <div class="d-flex gap-2">
+                    <a href="{% url 'login' %}" class="btn btn-outline-primary">
+                        <span class="material-icons align-middle me-1" style="font-size: 20px;">login</span>
+                        Giriş Yap
+                    </a>
+                </div>
                 {% endif %}
             </div>
         </div>
     </nav>
 
-    <div class="container-fluid">
-        <div class="row">
-            {% if user.is_authenticated %}
-            <!-- Sidebar -->
-            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
-                <div class="position-sticky pt-3">
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" 
-                               href="{% url 'dashboard' %}">
-                                <i class="fas fa-tachometer-alt"></i> Gösterge Paneli
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if 'proje' in request.resolver_match.url_name %}active{% endif %}" 
-                               href="{% url 'proje_listesi' %}">
-                                <i class="fas fa-tasks"></i> Projeler
-                            </a>
-                        </li>
-                        {% if user.unvan == 'GM' %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'proje_ekle' %}">
-                                <i class="fas fa-plus"></i> Yeni Proje
-                            </a>
-                        </li>
-                        {% endif %}
-                        <li class="nav-item">
-                            <a class="nav-link {% if 'rapor' in request.resolver_match.url_name %}active{% endif %}" 
-                               href="{% url 'rapor_listesi' %}">
-                                <i class="fas fa-chart-line"></i> Raporlar
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
-            {% endif %}
-
-            <!-- Ana İçerik -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                {% if messages %}
-                <div class="messages mt-3">
-                    {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% endif %}
-
-                <div class="content">
-                    {% block content %}{% endblock %}
-                </div>
-            </main>
+    <!-- Main Content -->
+    <div class="container mb-4">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
+        {% endfor %}
+        {% endif %}
+
+        {% block content %}{% endblock %}
     </div>
 
-    <!-- Bootstrap Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

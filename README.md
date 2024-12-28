@@ -1,24 +1,31 @@
 # Proje Takip Sistemi
 
-Django tabanlı bir proje takip sistemi. Kurumsal yapıda proje ve görev yönetimini kolaylaştırmak için tasarlanmıştır.
+Django tabanlı proje ve görev takip sistemi.
 
 ## Özellikler
 
-- Kullanıcı rolleri (Genel Müdür, Daire Başkanı, Şube Müdürü, Personel)
-- Proje yönetimi
-- Görev takibi
+- Kullanıcı yetkilendirme sistemi
+- Proje oluşturma ve yönetme
+- Görev atama ve takibi
 - İlerleme raporları
 - Dosya ve fotoğraf yükleme
-- Detaylı raporlama
+- Dashboard ve istatistikler
 
 ## Kurulum
 
-1. Python 3.8+ yüklü olmalıdır
-2. Sanal ortam oluşturun ve aktif edin:
+1. Projeyi klonlayın:
 ```bash
-python -m venv env
-source env/bin/activate  # Linux/Mac
-env\Scripts\activate     # Windows
+git clone <repository-url>
+cd proje_takip
+```
+
+2. Virtual environment oluşturun ve aktif edin:
+```bash
+python -m venv venv
+# Windows için:
+venv\Scripts\activate
+# Linux/Mac için:
+source venv/bin/activate
 ```
 
 3. Gerekli paketleri yükleyin:
@@ -26,12 +33,12 @@ env\Scripts\activate     # Windows
 pip install -r requirements.txt
 ```
 
-4. Veritabanını oluşturun:
+4. Veritabanı migrasyonlarını yapın:
 ```bash
 python manage.py migrate
 ```
 
-5. Superuser oluşturun:
+5. Süper kullanıcı oluşturun:
 ```bash
 python manage.py createsuperuser
 ```
@@ -43,10 +50,10 @@ python manage.py runserver
 
 ## Kullanım
 
-1. Admin paneline giriş yapın (`http://127.0.0.1:8000/admin`)
-2. Daire Başkanlıkları ve Şube Müdürlükleri oluşturun
-3. Personel ekleyin ve rollerini atayın
-4. Projeler oluşturun ve görevleri atayın
+1. Admin paneline giriş yapın: `http://127.0.0.1:8000/admin/`
+2. Daire Başkanlıkları ve Şube Müdürlükleri ekleyin
+3. Kullanıcıları oluşturun ve yetkilendirin
+4. Proje ve görevleri yönetin
 
 ## Lisans
 

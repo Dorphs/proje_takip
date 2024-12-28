@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">Görev Silme Onayı</h5>
+                </div>
+                <div class="card-body">
+                    <p class="lead">
+                        <strong>"{{ gorev.baslik }}"</strong> görevini silmek istediğinizden emin misiniz?
+                    </p>
+                    <p class="text-muted">
+                        Bu işlem geri alınamaz ve göreve ait tüm ilerlemeler de silinecektir.
+                    </p>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="material-icons align-middle">delete</i>
+                                Görevi Sil
+                            </button>
+                            <a href="{% url 'proje_detay' pk=gorev.proje.pk %}" class="btn btn-secondary">
+                                <i class="material-icons align-middle">arrow_back</i>
+                                İptal
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

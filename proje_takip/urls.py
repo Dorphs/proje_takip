@@ -21,5 +21,11 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('accounts/', include('django.contrib.auth.urls')),  # Django auth views
     path('', include('core.urls')),  # Ana uygulama URL'leri
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)  # Medya dosyaları için URL yapılandırması
+]
+
+# Statik ve medya dosyaları için URL yapılandırması
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

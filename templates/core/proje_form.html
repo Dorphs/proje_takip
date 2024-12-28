@@ -22,10 +22,10 @@
                                 {{ form.bitis_tarihi|as_crispy_field }}
                             </div>
                             <div class="col-md-6">
-                                {{ form.oncelik|as_crispy_field }}
                                 {{ form.durum|as_crispy_field }}
-                                {{ form.daire_baskanliklari|as_crispy_field }}
-                                {{ form.sube_mudurlukleri|as_crispy_field }}
+                                {{ form.daire_baskanligi|as_crispy_field }}
+                                {{ form.sube_mudurlugu|as_crispy_field }}
+                                {{ form.atanan_kisiler|as_crispy_field }}
                             </div>
                         </div>
                         <div class="row mt-3">
@@ -40,28 +40,4 @@
         </div>
     </div>
 </div>
-
-{% block extra_js %}
-<script>
-    // Daire Başkanlığı seçimine göre Şube Müdürlüklerini filtreleme
-    document.addEventListener('DOMContentLoaded', function() {
-        const daireSelect = document.getElementById('id_daire_baskanliklari');
-        const subeSelect = document.getElementById('id_sube_mudurlukleri');
-        
-        if (daireSelect && subeSelect) {
-            daireSelect.addEventListener('change', function() {
-                const selectedDaires = Array.from(daireSelect.selectedOptions).map(opt => opt.value);
-                
-                // Tüm şube seçeneklerini gizle
-                Array.from(subeSelect.options).forEach(opt => {
-                    const dairePk = opt.getAttribute('data-daire');
-                    if (dairePk) {
-                        opt.style.display = selectedDaires.includes(dairePk) ? '' : 'none';
-                    }
-                });
-            });
-        }
-    });
-</script>
-{% endblock %}
 {% endblock %}

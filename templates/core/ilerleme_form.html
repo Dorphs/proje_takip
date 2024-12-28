@@ -1,84 +1,51 @@
 {% extends 'base.html' %}
-{% load crispy_forms_tags %}
 
-{% block title %}{{ title }} - Proje Takip Sistemi{% endblock %}
+{% block title %}İlerleme Kaydı Ekle - {{ proje.ad }} - {{ block.super }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="row justify-content-center">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">{{ title }}</h4>
-                    <p class="mb-0">Proje: {{ proje.ad }}</p>
+<div class="max-w-2xl mx-auto">
+    <div class="mb-6">
+        <h1 class="text-2xl font-semibold flex items-center">
+            <span class="material-icons mr-2">add_task</span>
+            İlerleme Kaydı Ekle
+        </h1>
+        <p class="text-gray-600">{{ proje.ad }}</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            {% for field in form %}
+            <div class="mb-4">
+                <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ field.label }}
+                </label>
+                {{ field }}
+                {% if field.help_text %}
+                <p class="mt-1 text-sm text-gray-500">{{ field.help_text }}</p>
+                {% endif %}
+                {% if field.errors %}
+                <div class="mt-1">
+                    {% for error in field.errors %}
+                    <p class="text-sm text-red-600">{{ error }}</p>
+                    {% endfor %}
                 </div>
-                <div class="card-body">
-                    <form method="post" enctype="multipart/form-data" class="form">
-                        {% csrf_token %}
-                        {{ form.aciklama|as_crispy_field }}
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="id_dosyalar">Dosyalar</label>
-                                    <input type="file" name="dosyalar" multiple class="form-control" id="id_dosyalar">
-                                    <small class="form-text text-muted">Birden fazla dosya seçebilirsiniz.</small>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="id_fotograflar">Fotoğraflar</label>
-                                    <input type="file" name="fotograflar" multiple class="form-control" id="id_fotograflar" accept="image/*">
-                                    <small class="form-text text-muted">Birden fazla fotoğraf seçebilirsiniz.</small>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row mt-3">
-                            <div class="col-12 text-end">
-                                <a href="{% url 'proje_detay' pk=proje.pk %}" class="btn btn-secondary">İptal</a>
-                                <button type="submit" class="btn btn-primary">Kaydet</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
+                {% endif %}
             </div>
-        </div>
+            {% endfor %}
+            
+            <div class="flex justify-end space-x-3 mt-6">
+                <a href="{% url 'proje_detay' pk=proje.pk %}" class="btn btn-outline">
+                    <span class="material-icons mr-1">arrow_back</span>
+                    İptal
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <span class="material-icons mr-1">save</span>
+                    Kaydet
+                </button>
+            </div>
+        </form>
     </div>
 </div>
-
-{% block extra_js %}
-<script>
-    // Dosya seçildiğinde önizleme göster
-    document.getElementById('id_fotograflar').addEventListener('change', function(e) {
-        const previewContainer = document.createElement('div');
-        previewContainer.className = 'row mt-3';
-        previewContainer.id = 'foto-preview';
-        
-        // Önceki önizlemeleri temizle
-        const oldPreview = document.getElementById('foto-preview');
-        if (oldPreview) oldPreview.remove();
-        
-        // Seçilen her fotoğraf için önizleme oluştur
-        for (const file of this.files) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const col = document.createElement('div');
-                col.className = 'col-md-3 mb-3';
-                
-                const img = document.createElement('img');
-                img.src = e.target.result;
-                img.className = 'img-thumbnail';
-                img.style.maxHeight = '200px';
-                
-                col.appendChild(img);
-                previewContainer.appendChild(col);
-            }
-            reader.readAsDataURL(file);
-        }
-        
-        this.parentElement.appendChild(previewContainer);
-    });
-</script>
-{% endblock %}
 {% endblock %}
