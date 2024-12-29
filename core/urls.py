@@ -27,4 +27,8 @@ urlpatterns = [
     
     # İlerleme URL'leri
     path('proje/<int:proje_pk>/ilerleme/ekle/', views.ilerleme_ekle, name='proje_ilerleme_ekle'),
+    
+    # API endpoints
+    path('api/sube-mudurlukleri/<int:daire_id>/', views.get_sube_mudurlukleri, name='get_sube_mudurlukleri'),
+    path('api/kullanicilar/<int:daire_id>/<int:sube_id>/', views.get_kullanicilar, name='get_kullanicilar'),
 ]

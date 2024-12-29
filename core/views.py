@@ -6,6 +6,8 @@ from django.contrib import messages
 from .forms import ProjeForm, GorevForm, IlerlemeForm, CustomUserCreationForm
 from .models import Proje, Gorev, Ilerleme, CustomUser
 from django.utils import timezone
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
 
 @login_required
 def dashboard(request):
@@ -111,81 +113,75 @@ def proje_detay(request, pk):
 
 @login_required
 def proje_ekle(request):
-    """Proje ekleme görünümü"""
-    if not (request.user.is_superuser or request.user.is_yonetici()):
-        messages.error(request, 'Bu işlem için yetkiniz bulunmamaktadır.')
-        return redirect('proje_listesi')
-    
+    """Yeni proje ekleme görünümü"""
     if request.method == 'POST':
-        form = ProjeForm(request.POST, user=request.user)
+        form = ProjeForm(request.POST)
         if form.is_valid():
             proje = form.save(commit=False)
             proje.olusturan = request.user
-            if not request.user.is_superuser:
-                proje.daire_baskanligi = request.user.daire_baskanligi
-                proje.sube_mudurlugu = request.user.sube_mudurlugu
             proje.save()
-            form.save_m2m()
             messages.success(request, 'Proje başarıyla oluşturuldu.')
-            return redirect('proje_detay', pk=proje.pk)
+            return redirect('proje_listesi')
     else:
-        form = ProjeForm(user=request.user)
-    
-    context = {
+        form = ProjeForm()
+        if not request.user.is_superuser:
+            form.fields['daire_baskanligi'].initial = request.user.daire_baskanligi
+            form.fields['daire_baskanligi'].disabled = True
+            form.fields['sube_mudurlugu'].initial = request.user.sube_mudurlugu
+            form.fields['sube_mudurlugu'].disabled = True
+
+    return render(request, 'core/proje_form.html', {
         'form': form,
-        'title': 'Yeni Proje Oluştur'
-    }
-    return render(request, 'core/proje_form.html', context)
+        'title': 'Yeni Proje Ekle'
+    })
 
 @login_required
 def proje_duzenle(request, pk):
     """Proje düzenleme görünümü"""
     proje = get_object_or_404(Proje, pk=pk)
     
-    if not (request.user.is_superuser or request.user.can_manage_project(proje)):
-        messages.error(request, 'Bu işlem için yetkiniz bulunmamaktadır.')
-        return redirect('proje_listesi')
-    
     if request.method == 'POST':
-        form = ProjeForm(request.POST, instance=proje, user=request.user)
+        form = ProjeForm(request.POST, instance=proje)
         if form.is_valid():
             form.save()
             messages.success(request, 'Proje başarıyla güncellendi.')
-            return redirect('proje_detay', pk=proje.pk)
+            return redirect('proje_listesi')
     else:
-        form = ProjeForm(instance=proje, user=request.user)
-    
-    context = {
+        form = ProjeForm(instance=proje)
+        if not request.user.is_superuser:
+            form.fields['daire_baskanligi'].disabled = True
+            form.fields['sube_mudurlugu'].disabled = True
+
+    return render(request, 'core/proje_form.html', {
         'form': form,
         'title': 'Proje Düzenle'
-    }
-    return render(request, 'core/proje_form.html', context)
+    })
 
 @login_required
 def gorev_ekle(request, proje_pk):
-    """Görev ekleme görünümü"""
+    """Görev ekleme view'ı"""
     proje = get_object_or_404(Proje, pk=proje_pk)
     
-    if not (request.user.is_superuser or request.user.can_manage_project(proje) or request.user in proje.atanan_kisiler.all()):
-        messages.error(request, 'Bu işlem için yetkiniz bulunmamaktadır.')
+    # Kullanıcının yetkisini kontrol et
+    if not (request.user.is_superuser or request.user.is_yonetici or request.user in proje.atanan_kisiler.all()):
+        messages.error(request, 'Bu işlem için yetkiniz yok.')
         return redirect('proje_detay', pk=proje_pk)
-    
+
     if request.method == 'POST':
-        form = GorevForm(request.POST, proje=proje, user=request.user)
+        form = GorevForm(request.POST, proje=proje)
         if form.is_valid():
             gorev = form.save(commit=False)
             gorev.proje = proje
-            gorev.olusturan = request.user
             gorev.save()
-            messages.success(request, 'Görev başarıyla oluşturuldu.')
+            messages.success(request, 'Görev başarıyla eklendi.')
             return redirect('proje_detay', pk=proje_pk)
     else:
-        form = GorevForm(proje=proje, user=request.user)
-    
+        form = GorevForm(proje=proje)
+
     context = {
         'form': form,
+        'title': 'Görev Ekle',
         'proje': proje,
-        'title': 'Yeni Görev Oluştur'
     }
     return render(request, 'core/gorev_form.html', context)
 
@@ -370,3 +366,24 @@ def register(request):
     else:
         form = CustomUserCreationForm()
     return render(request, 'registration/register.html', {'form': form})
+
+@require_http_methods(["GET"])
+def get_sube_mudurlukleri(request, daire_id):
+    """Daire başkanlığına göre şube müdürlüklerini döndürür"""
+    try:
+        sube_mudurlukleri = SubeMudurlugu.objects.filter(daire_baskanligi_id=daire_id).values('id', 'ad')
+        return JsonResponse(list(sube_mudurlukleri), safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+@require_http_methods(["GET"])
+def get_kullanicilar(request, daire_id, sube_id):
+    """Daire başkanlığı ve şube müdürlüğüne göre kullanıcıları döndürür"""
+    try:
+        kullanicilar = CustomUser.objects.filter(
+            daire_baskanligi_id=daire_id,
+            sube_mudurlugu_id=sube_id
+        ).values('id', 'first_name', 'last_name')
+        return JsonResponse(list(kullanicilar), safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)

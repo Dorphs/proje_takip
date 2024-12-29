@@ -1,42 +1,83 @@
 {% extends 'base.html' %}
-{% load crispy_forms_tags %}
+{% load static %}
 
-{% block title %}{{ title }} - Proje Takip Sistemi{% endblock %}
+{% block title %}{{ title }} - {{ block.super }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="container">
     <div class="row justify-content-center">
-        <div class="col-12">
+        <div class="col-md-8">
             <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">{{ title }}</h4>
-                    {% if proje %}
-                    <p class="mb-0">Proje: {{ proje.ad }}</p>
-                    {% endif %}
+                <div class="card-header">
+                    <h5 class="mb-0">{{ title }}</h5>
                 </div>
                 <div class="card-body">
-                    <form method="post" class="form">
+                    <form method="post">
                         {% csrf_token %}
-                        <div class="row">
-                            <div class="col-md-6">
-                                {{ form.baslik|as_crispy_field }}
-                                {{ form.aciklama|as_crispy_field }}
-                                {{ form.atanan|as_crispy_field }}
-                            </div>
-                            <div class="col-md-6">
-                                {{ form.son_tarih|as_crispy_field }}
-                                {{ form.durum|as_crispy_field }}
-                            </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.baslik.id_for_label }}" class="form-label">{{ form.baslik.label }}</label>
+                            {{ form.baslik }}
+                            {% if form.baslik.errors %}
+                            <div class="invalid-feedback d-block">{{ form.baslik.errors }}</div>
+                            {% endif %}
                         </div>
-                        <div class="row mt-3">
-                            <div class="col-12 text-end">
-                                {% if gorev %}
-                                <a href="{% url 'proje_detay' pk=gorev.proje.pk %}" class="btn btn-secondary">İptal</a>
-                                {% else %}
-                                <a href="{% url 'proje_detay' pk=proje.pk %}" class="btn btn-secondary">İptal</a>
-                                {% endif %}
-                                <button type="submit" class="btn btn-primary">Kaydet</button>
-                            </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.daire_baskanligi.id_for_label }}" class="form-label">{{ form.daire_baskanligi.label }}</label>
+                            {{ form.daire_baskanligi }}
+                            {% if form.daire_baskanligi.errors %}
+                            <div class="invalid-feedback d-block">{{ form.daire_baskanligi.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.sube_mudurlugu.id_for_label }}" class="form-label">{{ form.sube_mudurlugu.label }}</label>
+                            {{ form.sube_mudurlugu }}
+                            {% if form.sube_mudurlugu.errors %}
+                            <div class="invalid-feedback d-block">{{ form.sube_mudurlugu.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.atanan.id_for_label }}" class="form-label">{{ form.atanan.label }}</label>
+                            {{ form.atanan }}
+                            {% if form.atanan.errors %}
+                            <div class="invalid-feedback d-block">{{ form.atanan.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.son_tarih.id_for_label }}" class="form-label">{{ form.son_tarih.label }}</label>
+                            {{ form.son_tarih }}
+                            {% if form.son_tarih.errors %}
+                            <div class="invalid-feedback d-block">{{ form.son_tarih.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.durum.id_for_label }}" class="form-label">{{ form.durum.label }}</label>
+                            {{ form.durum }}
+                            {% if form.durum.errors %}
+                            <div class="invalid-feedback d-block">{{ form.durum.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.aciklama.id_for_label }}" class="form-label">{{ form.aciklama.label }}</label>
+                            {{ form.aciklama }}
+                            {% if form.aciklama.errors %}
+                            <div class="invalid-feedback d-block">{{ form.aciklama.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="text-end">
+                            {% if gorev %}
+                            <a href="{% url 'proje_detay' pk=gorev.proje.pk %}" class="btn btn-secondary">İptal</a>
+                            {% else %}
+                            <a href="{% url 'proje_detay' pk=proje.pk %}" class="btn btn-secondary">İptal</a>
+                            {% endif %}
+                            <button type="submit" class="btn btn-primary">Kaydet</button>
                         </div>
                     </form>
                 </div>
@@ -44,4 +85,8 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/gorev_form.js' %}"></script>
 {% endblock %}

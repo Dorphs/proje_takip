@@ -52,10 +52,12 @@
                 <span class="material-icons me-2">task</span>
                 Görevler
             </h5>
+            {% if user.is_superuser or user.is_yonetici or user in proje.atanan_kisiler.all %}
             <a href="{% url 'gorev_ekle' proje_pk=proje.pk %}" class="btn btn-primary btn-sm">
                 <span class="material-icons me-1">add</span>
                 Görev Ekle
             </a>
+            {% endif %}
         </div>
         <div class="card-body">
             {% if gorevler %}
@@ -100,10 +102,12 @@
             <div class="text-center py-5">
                 <span class="material-icons text-muted mb-3" style="font-size: 48px;">task</span>
                 <h5 class="mb-3">Henüz görev eklenmemiş</h5>
+                {% if user.is_superuser or user.is_yonetici or user in proje.atanan_kisiler.all %}
                 <a href="{% url 'gorev_ekle' proje_pk=proje.pk %}" class="btn btn-primary">
                     <span class="material-icons me-1">add</span>
                     İlk Görevi Ekle
                 </a>
+                {% endif %}
             </div>
             {% endif %}
         </div>

@@ -77,45 +77,65 @@ class CustomUser(AbstractUser):
 class Proje(models.Model):
     """Proje modeli"""
     DURUM_CHOICES = [
-        ('BASLAMADI', 'Başlamadı'),
-        ('DEVAM', 'Devam Ediyor'),
-        ('TAMAMLANDI', 'Tamamlandı'),
+        ('beklemede', 'Beklemede'),
+        ('devam_ediyor', 'Devam Ediyor'),
+        ('tamamlandi', 'Tamamlandı'),
+        ('iptal_edildi', 'İptal Edildi'),
+    ]
+    
+    ONCELIK_CHOICES = [
+        ('dusuk', 'Düşük'),
+        ('normal', 'Normal'),
+        ('yuksek', 'Yüksek'),
+        ('kritik', 'Kritik'),
     ]
 
     ad = models.CharField(max_length=200, verbose_name="Proje Adı")
-    aciklama = models.TextField(blank=True, null=True, verbose_name="Açıklama")
-    daire_baskanligi = models.CharField(max_length=100, verbose_name="Daire Başkanlığı", blank=True, null=True)
-    sube_mudurlugu = models.CharField(max_length=100, verbose_name="Şube Müdürlüğü", blank=True, null=True)
+    daire_baskanligi = models.ForeignKey(DaireBaskanligi, on_delete=models.CASCADE, related_name='projeler', verbose_name="Daire Başkanlığı")
+    sube_mudurlugu = models.ForeignKey(SubeMudurlugu, on_delete=models.CASCADE, related_name='projeler', verbose_name="Şube Müdürlüğü")
     baslama_tarihi = models.DateField(verbose_name="Başlama Tarihi")
     bitis_tarihi = models.DateField(verbose_name="Bitiş Tarihi")
-    durum = models.CharField(max_length=20, choices=DURUM_CHOICES, default='BASLAMADI', verbose_name="Durum")
+    durum = models.CharField(max_length=20, choices=DURUM_CHOICES, default='beklemede', verbose_name="Durum")
+    oncelik = models.CharField(max_length=20, choices=ONCELIK_CHOICES, default='normal', verbose_name="Öncelik")
+    aciklama = models.TextField(blank=True, null=True, verbose_name="Açıklama")
     olusturan = models.ForeignKey(CustomUser, on_delete=models.PROTECT, related_name='olusturulan_projeler', verbose_name="Oluşturan")
     atanan_kisiler = models.ManyToManyField(CustomUser, related_name='atanan_projeler', blank=True, verbose_name="Atanan Kişiler")
     olusturulma_tarihi = models.DateTimeField(auto_now_add=True, verbose_name="Oluşturulma Tarihi")
     guncelleme_tarihi = models.DateTimeField(auto_now=True, verbose_name="Güncelleme Tarihi")
 
     def __str__(self):
-        return f"{self.ad} ({self.get_durum_display()})"
-    
-    class Meta:
-        verbose_name = "Proje"
-        verbose_name_plural = "Projeler"
-        ordering = ['-olusturulma_tarihi']
+        return self.ad
 
-    def get_tamamlanma_yuzdesi(self):
-        """Projenin tamamlanma yüzdesini hesaplar"""
-        if not self.gorevler.exists():
+    @property
+    def gecen_gun_sayisi(self):
+        """Projenin başlangıç tarihinden itibaren geçen gün sayısını hesaplar"""
+        if self.baslama_tarihi:
+            from datetime import date
+            today = date.today()
+            delta = today - self.baslama_tarihi
+            return delta.days
+        return 0
+
+    @property
+    def ilerleme_yuzdesi(self):
+        """Projenin ilerleme yüzdesini hesaplar"""
+        toplam_gorev = self.gorevler.count()
+        if toplam_gorev == 0:
             return 0
-        tamamlanan = self.gorevler.filter(durum='TAMAMLANDI').count()
-        toplam = self.gorevler.count()
-        return int((tamamlanan / toplam) * 100)
+        tamamlanan_gorev = self.gorevler.filter(durum='tamamlandi').count()
+        return int((tamamlanan_gorev / toplam_gorev) * 100)
+
+    class Meta:
+        verbose_name = 'Proje'
+        verbose_name_plural = 'Projeler'
+        ordering = ['-olusturulma_tarihi']
 
 class Gorev(models.Model):
     """Görev modeli"""
     DURUM_CHOICES = [
-        ('BASLAMADI', 'Başlamadı'),
-        ('DEVAM', 'Devam Ediyor'),
-        ('TAMAMLANDI', 'Tamamlandı'),
+        ('beklemede', 'Beklemede'),
+        ('devam_ediyor', 'Devam Ediyor'),
+        ('tamamlandi', 'Tamamlandı'),
     ]
 
     proje = models.ForeignKey(Proje, on_delete=models.CASCADE, related_name='gorevler', verbose_name="Proje")
@@ -123,7 +143,7 @@ class Gorev(models.Model):
     aciklama = models.TextField(blank=True, null=True, verbose_name="Açıklama")
     atanan = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='atanan_gorevler', verbose_name="Atanan Kişi")
     son_tarih = models.DateField(null=True, blank=True, verbose_name="Son Tarih")
-    durum = models.CharField(max_length=20, choices=DURUM_CHOICES, default='BASLAMADI', verbose_name="Durum")
+    durum = models.CharField(max_length=20, choices=DURUM_CHOICES, default='beklemede', verbose_name="Durum")
     olusturan = models.ForeignKey(CustomUser, on_delete=models.PROTECT, related_name='olusturulan_gorevler', verbose_name="Oluşturan")
     olusturulma_tarihi = models.DateTimeField(auto_now_add=True, verbose_name="Oluşturulma Tarihi")
     guncelleme_tarihi = models.DateTimeField(auto_now=True, verbose_name="Güncelleme Tarihi")
@@ -138,7 +158,7 @@ class Gorev(models.Model):
 
     def gecikti_mi(self):
         """Görevin gecikip gecikmediğini kontrol eder"""
-        if self.son_tarih and self.durum != 'TAMAMLANDI':
+        if self.son_tarih and self.durum != 'tamamlandi':
             return self.son_tarih < timezone.now().date()
         return False
 

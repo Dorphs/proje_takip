@@ -1,33 +1,28 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Proje, Gorev, Ilerleme, DaireBaskanligi, SubeMudurlugu
-from .forms import CustomUserCreationForm, CustomUserChangeForm
+from .models import DaireBaskanligi, SubeMudurlugu, CustomUser, Proje, Gorev, Ilerleme, Dosya, Fotograf
 
-# CustomUser için özel admin sınıfı
-class CustomUserAdmin(UserAdmin):
-    """Özelleştirilmiş kullanıcı yönetimi"""
-    add_form = CustomUserCreationForm
-    form = CustomUserChangeForm
-    model = CustomUser
+@admin.register(DaireBaskanligi)
+class DaireBaskanligi(admin.ModelAdmin):
+    """Daire Başkanlığı yönetimi"""
+    list_display = ['ad']
+    search_fields = ['ad']
+
+@admin.register(SubeMudurlugu)
+class SubeMudurluguAdmin(admin.ModelAdmin):
+    """Şube Müdürlüğü yönetimi"""
+    list_display = ['ad', 'daire_baskanligi']
+    list_filter = ['daire_baskanligi']
+    search_fields = ['ad', 'daire_baskanligi__ad']
+
+@admin.register(CustomUser)
+class CustomUserAdmin(admin.ModelAdmin):
+    """Kullanıcı yönetimi"""
     list_display = ['username', 'email', 'first_name', 'last_name', 'role', 'daire_baskanligi', 'sube_mudurlugu']
-    list_filter = ['role', 'daire_baskanligi', 'sube_mudurlugu', 'is_staff', 'is_active']
-    fieldsets = (
-        (None, {'fields': ('username', 'password')}),
-        ('Kişisel Bilgiler', {'fields': ('first_name', 'last_name', 'email')}),
-        ('Departman Bilgileri', {'fields': ('role', 'daire_baskanligi', 'sube_mudurlugu', 'unvan')}),
-        ('İzinler', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
-        ('Önemli Tarihler', {'fields': ('last_login', 'date_joined')}),
-    )
-    add_fieldsets = (
-        (None, {
-            'classes': ('wide',),
-            'fields': ('username', 'password1', 'password2', 'role', 'daire_baskanligi', 'sube_mudurlugu', 'unvan'),
-        }),
-    )
-    search_fields = ['username', 'first_name', 'last_name', 'email', 'daire_baskanligi', 'sube_mudurlugu']
-    ordering = ['username']
+    list_filter = ['role', 'daire_baskanligi', 'sube_mudurlugu']
+    search_fields = ['username', 'email', 'first_name', 'last_name']
+    filter_horizontal = ['groups', 'user_permissions']
 
-# Proje admin sınıfı
+@admin.register(Proje)
 class ProjeAdmin(admin.ModelAdmin):
     """Proje yönetimi"""
     list_display = ['ad', 'daire_baskanligi', 'sube_mudurlugu', 'durum', 'baslama_tarihi', 'bitis_tarihi']
@@ -36,7 +31,7 @@ class ProjeAdmin(admin.ModelAdmin):
     filter_horizontal = ['atanan_kisiler']
     date_hierarchy = 'baslama_tarihi'
 
-# Görev admin sınıfı
+@admin.register(Gorev)
 class GorevAdmin(admin.ModelAdmin):
     """Görev yönetimi"""
     list_display = ['baslik', 'proje', 'atanan', 'son_tarih', 'durum']
@@ -44,7 +39,7 @@ class GorevAdmin(admin.ModelAdmin):
     search_fields = ['baslik', 'aciklama', 'proje__ad']
     date_hierarchy = 'son_tarih'
 
-# İlerleme admin sınıfı
+@admin.register(Ilerleme)
 class IlerlemeAdmin(admin.ModelAdmin):
     """İlerleme yönetimi"""
     list_display = ['proje', 'kaydeden', 'tarih']
@@ -52,22 +47,16 @@ class IlerlemeAdmin(admin.ModelAdmin):
     search_fields = ['aciklama', 'proje__ad']
     date_hierarchy = 'tarih'
 
-class SubeMudurluguInline(admin.TabularInline):
-    model = SubeMudurlugu
-    extra = 1
+@admin.register(Dosya)
+class DosyaAdmin(admin.ModelAdmin):
+    """Dosya yönetimi"""
+    list_display = ['ilerleme', 'yukleme_tarihi']
+    list_filter = ['yukleme_tarihi']
+    date_hierarchy = 'yukleme_tarihi'
 
-class DaireBaskanligiAdmin(admin.ModelAdmin):
-    list_display = ('ad',)
-    inlines = [SubeMudurluguInline]
-
-class SubeMudurluguAdmin(admin.ModelAdmin):
-    list_display = ('ad', 'daire_baskanligi')
-    list_filter = ('daire_baskanligi',)
-
-# Admin sayfasına modelleri kaydet
-admin.site.register(CustomUser, CustomUserAdmin)
-admin.site.register(DaireBaskanligi, DaireBaskanligiAdmin)
-admin.site.register(SubeMudurlugu, SubeMudurluguAdmin)
-admin.site.register(Proje, ProjeAdmin)
-admin.site.register(Gorev, GorevAdmin)
-admin.site.register(Ilerleme, IlerlemeAdmin)
+@admin.register(Fotograf)
+class FotografAdmin(admin.ModelAdmin):
+    """Fotoğraf yönetimi"""
+    list_display = ['ilerleme', 'yukleme_tarihi']
+    list_filter = ['yukleme_tarihi']
+    date_hierarchy = 'yukleme_tarihi'

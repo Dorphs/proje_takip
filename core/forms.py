@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.db.models import Q
-from .models import CustomUser, Proje, Gorev, Ilerleme, SubeMudurlugu
+from .models import CustomUser, Proje, Gorev, Ilerleme, SubeMudurlugu, DaireBaskanligi
 
 class CustomUserCreationForm(UserCreationForm):
     """Kullanıcı oluşturma formu"""
@@ -45,57 +45,99 @@ class ProjeForm(forms.ModelForm):
     """Proje formu"""
     class Meta:
         model = Proje
-        fields = ['ad', 'aciklama', 'daire_baskanligi', 'sube_mudurlugu', 'baslama_tarihi', 'bitis_tarihi', 'durum', 'atanan_kisiler']
+        fields = ['ad', 'daire_baskanligi', 'sube_mudurlugu', 'baslama_tarihi', 
+                 'bitis_tarihi', 'durum', 'oncelik', 'aciklama']
         widgets = {
-            'baslama_tarihi': forms.DateInput(attrs={'type': 'date'}),
-            'bitis_tarihi': forms.DateInput(attrs={'type': 'date'}),
-            'atanan_kisiler': forms.SelectMultiple(attrs={'class': 'form-select'}),
-            'durum': forms.Select(attrs={'class': 'form-select'}),
+            'ad': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Proje adını girin'
+            }),
+            'daire_baskanligi': forms.Select(attrs={
+                'class': 'form-select select2',
+                'data-placeholder': 'Daire başkanlığı seçin'
+            }),
+            'sube_mudurlugu': forms.Select(attrs={
+                'class': 'form-select select2',
+                'data-placeholder': 'Şube müdürlüğü seçin'
+            }),
+            'baslama_tarihi': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'bitis_tarihi': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'durum': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+            'oncelik': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+            'aciklama': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': '4',
+                'placeholder': 'Proje açıklamasını girin'
+            })
         }
 
-    def __init__(self, *args, user=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if user:
-            if not user.is_superuser:
-                # Yönetici olmayan kullanıcılar sadece kendi daire/müdürlüklerindeki kişileri atayabilir
-                self.fields['daire_baskanligi'].initial = user.daire_baskanligi
-                self.fields['daire_baskanligi'].disabled = True
-                self.fields['sube_mudurlugu'].initial = user.sube_mudurlugu
-                self.fields['sube_mudurlugu'].disabled = True
-                self.fields['atanan_kisiler'].queryset = CustomUser.objects.filter(
-                    Q(daire_baskanligi=user.daire_baskanligi) &
-                    Q(sube_mudurlugu=user.sube_mudurlugu)
+        instance = kwargs.get('instance')
+
+        # Şube müdürlüğü queryset'ini başlangıçta boşalt
+        self.fields['sube_mudurlugu'].queryset = SubeMudurlugu.objects.none()
+
+        # Eğer instance varsa veya POST isteği ise
+        if instance or (args and args[0] and 'daire_baskanligi' in args[0]):
+            try:
+                daire_id = instance.daire_baskanligi_id if instance else int(args[0]['daire_baskanligi'])
+                self.fields['sube_mudurlugu'].queryset = SubeMudurlugu.objects.filter(
+                    daire_baskanligi_id=daire_id
                 )
-            else:
-                # Süper kullanıcı tüm kullanıcıları görebilir
-                self.fields['atanan_kisiler'].queryset = CustomUser.objects.all()
+            except (ValueError, TypeError, KeyError):
+                pass
 
 class GorevForm(forms.ModelForm):
     """Görev formu"""
+    daire_baskanligi = forms.ModelChoiceField(
+        queryset=DaireBaskanligi.objects.all(),
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        label="Daire Başkanlığı"
+    )
+    sube_mudurlugu = forms.ModelChoiceField(
+        queryset=SubeMudurlugu.objects.none(),
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select', 'disabled': 'disabled'}),
+        label="Şube Müdürlüğü"
+    )
+
     class Meta:
         model = Gorev
-        fields = ['baslik', 'aciklama', 'atanan', 'son_tarih', 'durum']
+        fields = ['baslik', 'aciklama', 'son_tarih', 'durum', 'atanan']
         widgets = {
-            'son_tarih': forms.DateInput(attrs={'type': 'date'}),
-            'atanan': forms.Select(attrs={'class': 'form-select'}),
+            'baslik': forms.TextInput(attrs={'class': 'form-control'}),
+            'aciklama': forms.Textarea(attrs={'class': 'form-control'}),
+            'son_tarih': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'durum': forms.Select(attrs={'class': 'form-select'}),
+            'atanan': forms.Select(attrs={'class': 'form-select'}),
         }
 
     def __init__(self, *args, proje=None, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        if proje and user:
-            if user.is_superuser:
-                # Süper kullanıcı tüm kullanıcıları görebilir
-                self.fields['atanan'].queryset = CustomUser.objects.all()
-            elif user.can_manage_project(proje):
-                # Yöneticiler kendi birimlerindeki kullanıcıları görebilir
-                self.fields['atanan'].queryset = CustomUser.objects.filter(
-                    Q(daire_baskanligi=proje.daire_baskanligi) &
-                    Q(sube_mudurlugu=proje.sube_mudurlugu)
-                )
-            else:
-                # Normal kullanıcılar sadece kendilerini seçebilir
-                self.fields['atanan'].queryset = CustomUser.objects.filter(id=user.id)
+        if proje:
+            # Projenin daire başkanlığı ve şube müdürlüğüne göre kullanıcıları filtrele
+            self.fields['atanan'].queryset = CustomUser.objects.filter(
+                daire_baskanligi=proje.daire_baskanligi,
+                sube_mudurlugu=proje.sube_mudurlugu
+            )
+            # Daire başkanlığı ve şube müdürlüğü alanlarını otomatik doldur
+            self.fields['daire_baskanligi'].initial = proje.daire_baskanligi
+            self.fields['sube_mudurlugu'].initial = proje.sube_mudurlugu
+            self.fields['sube_mudurlugu'].queryset = SubeMudurlugu.objects.filter(
+                daire_baskanligi=proje.daire_baskanligi
+            )
 
 class IlerlemeForm(forms.ModelForm):
     """İlerleme formu"""
