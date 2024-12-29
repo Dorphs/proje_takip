@@ -17,8 +17,8 @@ class DaireBaskanligi(models.Model):
 
 class SubeMudurlugu(models.Model):
     """Şube Müdürlüğü modeli"""
-    ad = models.CharField(max_length=100)
     daire_baskanligi = models.ForeignKey(DaireBaskanligi, on_delete=models.CASCADE, related_name='sube_mudurlukleri')
+    ad = models.CharField(max_length=100)
     
     def __str__(self):
         return f"{self.daire_baskanligi.ad} - {self.ad}"
@@ -31,10 +31,16 @@ class SubeMudurlugu(models.Model):
 
 class CustomUser(AbstractUser):
     """Özelleştirilmiş kullanıcı modeli"""
-    daire_baskanligi = models.CharField(max_length=100, blank=True, null=True, verbose_name="Daire Başkanlığı")
-    sube_mudurlugu = models.CharField(max_length=100, blank=True, null=True, verbose_name="Şube Müdürlüğü")
+    ROLES = [
+        ('daire_baskani', 'Daire Başkanı'),
+        ('sube_muduru', 'Şube Müdürü'),
+        ('personel', 'Personel'),
+    ]
+    
+    role = models.CharField(max_length=20, choices=ROLES, default='personel', verbose_name="Rol")
+    daire_baskanligi = models.ForeignKey(DaireBaskanligi, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Daire Başkanlığı")
+    sube_mudurlugu = models.ForeignKey(SubeMudurlugu, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Şube Müdürlüğü")
     unvan = models.CharField(max_length=100, blank=True, null=True, verbose_name="Ünvan")
-    yonetici = models.BooleanField(default=False, verbose_name="Yönetici")
 
     class Meta:
         verbose_name = "Kullanıcı"
@@ -49,7 +55,7 @@ class CustomUser(AbstractUser):
 
     def is_yonetici(self):
         """Kullanıcının yönetici olup olmadığını kontrol eder"""
-        return self.yonetici or self.is_superuser
+        return self.is_superuser
 
     def can_manage_project(self, proje):
         """Kullanıcının projeyi yönetip yönetemeyeceğini kontrol eder"""

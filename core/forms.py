@@ -1,19 +1,45 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.db.models import Q
-from .models import CustomUser, Proje, Gorev, Ilerleme
+from .models import CustomUser, Proje, Gorev, Ilerleme, SubeMudurlugu
 
 class CustomUserCreationForm(UserCreationForm):
     """Kullanıcı oluşturma formu"""
     class Meta(UserCreationForm.Meta):
         model = CustomUser
-        fields = ('username', 'first_name', 'last_name', 'email', 'daire_baskanligi', 'sube_mudurlugu', 'unvan', 'yonetici')
+        fields = ('username', 'email', 'first_name', 'last_name', 'role', 'daire_baskanligi', 'sube_mudurlugu', 'unvan')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['sube_mudurlugu'].queryset = SubeMudurlugu.objects.none()
+        
+        if 'daire_baskanligi' in self.data:
+            try:
+                daire_id = int(self.data.get('daire_baskanligi'))
+                self.fields['sube_mudurlugu'].queryset = SubeMudurlugu.objects.filter(daire_baskanligi_id=daire_id)
+            except (ValueError, TypeError):
+                pass
+        elif self.instance.pk and self.instance.daire_baskanligi:
+            self.fields['sube_mudurlugu'].queryset = self.instance.daire_baskanligi.sube_mudurlukleri.all()
 
 class CustomUserChangeForm(UserChangeForm):
     """Kullanıcı düzenleme formu"""
     class Meta(UserChangeForm.Meta):
         model = CustomUser
-        fields = ('username', 'first_name', 'last_name', 'email', 'daire_baskanligi', 'sube_mudurlugu', 'unvan', 'yonetici')
+        fields = ('username', 'email', 'first_name', 'last_name', 'role', 'daire_baskanligi', 'sube_mudurlugu', 'unvan')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['sube_mudurlugu'].queryset = SubeMudurlugu.objects.none()
+        
+        if 'daire_baskanligi' in self.data:
+            try:
+                daire_id = int(self.data.get('daire_baskanligi'))
+                self.fields['sube_mudurlugu'].queryset = SubeMudurlugu.objects.filter(daire_baskanligi_id=daire_id)
+            except (ValueError, TypeError):
+                pass
+        elif self.instance.pk and self.instance.daire_baskanligi:
+            self.fields['sube_mudurlugu'].queryset = self.instance.daire_baskanligi.sube_mudurlukleri.all()
 
 class ProjeForm(forms.ModelForm):
     """Proje formu"""
